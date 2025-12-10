@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+venv/
+.env/
+
+# Databases
+*.db
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# Railway
+.railway/
+
+# Node
+node_modules/
