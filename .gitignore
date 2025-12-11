@@ -1,23 +1,39 @@
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-.env
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
 venv/
-.env/
+.venv/
 
-# Databases
+# Database
 *.db
+*.sqlite3
+*.db-journal
 
 # Logs
 *.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
 # OS
 .DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
 
 # Railway
-.railway/
+railway.toml
 
-# Node
-node_modules/
+# Temporary files
+tmp/
+temp/

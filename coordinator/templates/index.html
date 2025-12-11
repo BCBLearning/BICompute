@@ -1,0 +1,385 @@
+{% extends "layout.html" %}
+
+{% block title %}🚀 BI-COMPUTE Hackathon Dashboard{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="text-center mb-5 animate-fadeIn">
+    <h1 class="display-4 fw-bold mb-3">
+        🤖 Computing Distribué pour le <span class="text-warning">Peuple</span>
+    </h1>
+    <p class="lead mb-4">
+        Hackathon LabLab AI: "Compute for the People, <strong>by the People</strong>"
+    </p>
+    
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="#demo" class="btn btn-primary btn-lg">
+            <i class="bi bi-play-circle"></i> Démarrer la démo
+        </a>
+        <a href="{{ coordinator_url }}/download/worker" class="btn btn-success btn-lg">
+            <i class="bi bi-download"></i> Télécharger Worker
+        </a>
+        <button onclick="startDemo()" class="btn btn-warning btn-lg">
+            <i class="bi bi-rocket-takeoff"></i> Démo automatique
+        </button>
+    </div>
+    
+    <div class="mt-4">
+        <div class="badge bg-info p-2">
+            <i class="bi bi-link-45deg"></i> {{ coordinator_url }}
+        </div>
+        {% if is_railway %}
+        <div class="badge bg-success p-2 ms-2">
+            <i class="bi bi-cloud-check"></i> Railway ☁️
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-5 g-4">
+    <div class="col-md-3">
+        <div class="stat-card bg-success animate-fadeIn" style="animation-delay: 0.1s">
+            <h5><i class="bi bi-pc-display"></i> Workers Actifs</h5>
+            <h1 class="animate-pulse">{{ active_workers }}</h1>
+            <p class="mb-0">{{ total_cpu }} cœurs CPU</p>
+            <p>{{ (total_memory / 1024)|round(1) }} Go RAM</p>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card bg-info animate-fadeIn" style="animation-delay: 0.2s">
+            <h5><i class="bi bi-list-task"></i> Tâches Totales</h5>
+            <h1>{{ total_tasks }}</h1>
+            <p class="mb-0">{{ completed_tasks }} terminées</p>
+            <p>{{ pending_tasks }} en attente</p>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card bg-warning animate-fadeIn" style="animation-delay: 0.3s">
+            <h5><i class="bi bi-speedometer2"></i> Performance</h5>
+            <h1>{{ completion_rate }}%</h1>
+            <p class="mb-0">Taux de complétion</p>
+            <p>{{ failed_tasks }} échecs</p>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card bg-danger animate-fadeIn" style="animation-delay: 0.4s">
+            <h5><i class="bi bi-globe2"></i> Infrastructure</h5>
+            <h4 class="mt-4">
+                {% if is_railway %}
+                    ☁️ Cloud
+                {% else %}
+                    💻 Local
+                {% endif %}
+            </h4>
+            <p class="mb-0">BI-COMPUTE v2.0</p>
+            <p>Multi-plateforme</p>
+        </div>
+    </div>
+</div>
+
+<!-- Demo Section -->
+<div id="demo" class="row mb-5 g-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-play-btn"></i> Participation à la démo</h4>
+            </div>
+            <div class="card-body">
+                <h5 class="text-primary">🎯 Pour les jurys et participants</h5>
+                
+                <div class="mb-4">
+                    <h6><i class="bi bi-terminal"></i> 1. Ouvrir un terminal</h6>
+                    <p class="text-muted">Linux, macOS, Windows ou Termux (Android)</p>
+                </div>
+                
+                <div class="mb-4">
+                    <h6><i class="bi bi-download"></i> 2. Télécharger le worker</h6>
+                    <code>wget {{ coordinator_url }}/download/worker -O worker.py</code>
+                    <small class="d-block text-muted mt-1">Ou cliquez le bouton ci-dessus</small>
+                </div>
+                
+                <div class="mb-4">
+                    <h6><i class="bi bi-gear"></i> 3. Lancer le worker</h6>
+                    <code>python worker.py</code>
+                    <small class="d-block text-muted mt-1">Python 3 requis</small>
+                </div>
+                
+                <div class="mb-4">
+                    <h6><i class="bi bi-check-circle"></i> 4. Vérifier la connexion</h6>
+                    <p>Le worker apparaîtra dans la liste ci-dessous</p>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Pour mobile (Termux):</strong> Même procédure, 
+                    <code>pkg install python && python worker.py</code>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="bi bi-send"></i> Soumettre une tâche</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/submit">
+                    <div class="mb-3">
+                        <label class="form-label">Nom de la tâche</label>
+                        <input type="text" class="form-control" name="name" 
+                               value="Hackathon Demo Task" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Type de tâche</label>
+                        <select class="form-select" name="type">
+                            <option value="shell">Shell Command</option>
+                            <option value="python">Python Script</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Commande / Code</label>
+                        <textarea class="form-control" name="command" rows="5" required>echo "Hello BI-COMPUTE Hackathon!"
+
+# Calcul simple
+echo "Calcul: $(( 123 * 456 ))"
+echo "Date: $(date)"
+echo "Machine: $(uname -a)"
+
+# Hash demo
+echo "Hackathon" | sha256sum</textarea>
+                        <div class="form-text">
+                            Pour Python: écrivez votre script Python directement
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="bi bi-rocket-takeoff"></i> Soumettre la tâche
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Workers Section -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="bi bi-pc-display-horizontal"></i> Workers Connectés</h4>
+                <span class="badge bg-light text-dark">{{ recent_workers|length }} workers</span>
+            </div>
+            <div class="card-body">
+                {% if recent_workers %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Plateforme</th>
+                                    <th>Dernière activité</th>
+                                    <th>Tâches complétées</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for worker in recent_workers %}
+                                <tr>
+                                    <td>
+                                        <i class="bi bi-pc-display text-primary"></i>
+                                        <strong>{{ worker.name }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ worker.platform }}</span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ worker.last_seen }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success rounded-pill">
+                                            {{ worker.tasks_completed }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if worker.last_seen > (current_time|datetime_minus(2)) %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-wifi"></i> Actif
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-clock-history"></i> Inactif
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-pc-display display-1 text-muted"></i>
+                        <h5 class="mt-3">Aucun worker connecté</h5>
+                        <p class="text-muted">Démarrez un worker pour participer à la démo !</p>
+                        <a href="#demo" class="btn btn-primary">
+                            <i class="bi bi-play-circle"></i> Comment démarrer
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tasks Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="bi bi-list-check"></i> Tâches Récentes</h4>
+                <span class="badge bg-light text-dark">{{ recent_tasks|length }} tâches</span>
+            </div>
+            <div class="card-body">
+                {% if recent_tasks %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nom</th>
+                                    <th>Statut</th>
+                                    <th>Créée le</th>
+                                    <th>Worker</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for task in recent_tasks %}
+                                <tr>
+                                    <td>
+                                        <code>#{{ task.id }}</code>
+                                    </td>
+                                    <td>
+                                        <strong>{{ task.name }}</strong>
+                                    </td>
+                                    <td>
+                                        {% if task.status == 'completed' %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle"></i> Terminée
+                                            </span>
+                                        {% elif task.status == 'pending' %}
+                                            <span class="badge bg-warning animate-pulse">
+                                                <i class="bi bi-clock"></i> En attente
+                                            </span>
+                                        {% elif task.status == 'failed' %}
+                                            <span class="badge bg-danger">
+                                                <i class="bi bi-x-circle"></i> Échouée
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ task.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ task.created_at }}</small>
+                                    </td>
+                                    <td>
+                                        {% if task.assigned_worker %}
+                                            <small>{{ task.assigned_worker }}</small>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox display-1 text-muted"></i>
+                        <h5 class="mt-3">Aucune tâche</h5>
+                        <p class="text-muted">Soumettez votre première tâche !</p>
+                        <a href="#demo" class="btn btn-success">
+                            <i class="bi bi-send"></i> Soumettre une tâche
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- API Info -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0"><i class="bi bi-code-slash"></i> API Endpoints</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6><code>GET /api/health</code></h6>
+                                <p class="small">Santé de l'API</p>
+                                <a href="/api/health" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    Tester
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6><code>GET /api/stats</code></h6>
+                                <p class="small">Statistiques réseau</p>
+                                <a href="/api/stats" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    Tester
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6><code>GET /api/tasks/available</code></h6>
+                                <p class="small">Tâches disponibles</p>
+                                <a href="/api/tasks/available" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    Tester
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6><code>GET /api/workers</code></h6>
+                                <p class="small">Liste des workers</p>
+                                <a href="/api/workers" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    Tester
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Filtre datetime pour Jinja2 (simulé)
+    function datetime_minus(minutes) {
+        return new Date(Date.now() - minutes * 60000).toISOString();
+    }
+</script>
+{% endblock %}

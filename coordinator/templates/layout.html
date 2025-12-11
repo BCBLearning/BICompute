@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}🚀 BI-COMPUTE Hackathon Demo{% endblock %}</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+    
+    <!-- Meta tags pour les jurys -->
+    <meta name="description" content="BI-COMPUTE Hackathon Demo - Computing distribué pour le peuple">
+    <meta name="keywords" content="hackathon, distributed computing, edge computing, bi-compute">
+    <meta name="author" content="BesmaInfo © 2025 - LabLab AI Hackathon">
+    
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-cpu-fill"></i> BI-COMPUTE
+                <span class="badge bg-warning ms-2">LabLab AI Hackathon</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/#demo">
+                            <i class="bi bi-play-circle"></i> Démo
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/download/worker">
+                            <i class="bi bi-download"></i> Worker
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ coordinator_url }}/api/health" target="_blank">
+                            <i class="bi bi-heart-pulse"></i> API Health
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ coordinator_url }}/api/stats" target="_blank">
+                            <i class="bi bi-graph-up"></i> Stats
+                        </a>
+                    </li>
+                    {% if is_railway %}
+                    <li class="nav-item">
+                        <span class="nav-link text-success">
+                            <i class="bi bi-cloud-check"></i> Railway ☁️
+                        </span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mt-5 pt-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show animate-fadeIn">
+                        <i class="bi bi-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="bi bi-cpu"></i> BI-COMPUTE Hackathon Demo</h5>
+                    <p class="text-muted">
+                        Computing distribué pour le peuple, par le peuple.<br>
+                        Déployé sur <a href="https://railway.app" target="_blank" class="text-decoration-none">Railway</a>
+                    </p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="btn-group">
+                        <a href="/api/health" target="_blank" class="btn btn-sm btn-outline-light">
+                            <i class="bi bi-heart-pulse"></i> Health
+                        </a>
+                        <a href="/api/stats" target="_blank" class="btn btn-sm btn-outline-light">
+                            <i class="bi bi-graph-up"></i> Stats
+                        </a>
+                        <a href="/api/tasks/available" target="_blank" class="btn btn-sm btn-outline-light">
+                            <i class="bi bi-list-task"></i> Tâches
+                        </a>
+                        <button onclick="resetDemo()" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-arrow-clockwise"></i> Reset
+                        </button>
+                    </div>
+                    <p class="text-muted mt-3">
+                        Dernière mise à jour: {{ current_time }}
+                    </p>
+                </div>
+            </div>
+            <hr class="text-light">
+            <div class="text-center">
+                <p class="text-muted mb-0">
+                    &copy; 2025 BesmaInfo - Hackathon LabLab AI • "Compute for the People, by the People"
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Auto-refresh toutes les 15 secondes
+        setTimeout(() => location.reload(), 15000);
+        
+        function resetDemo() {
+            if (confirm("Réinitialiser toute la démo ? Cette action supprime toutes les tâches et workers.")) {
+                fetch('/api/demo/reset', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('✅ Démo réinitialisée !');
+                            location.reload();
+                        } else {
+                            alert('❌ Erreur: ' + (data.error || 'Inconnue'));
+                        }
+                    })
+                    .catch(err => alert('❌ Erreur: ' + err));
+            }
+        }
+        
+        function startDemo() {
+            fetch('/api/demo/start', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ workers: 3 })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`🎬 Démo démarrée avec ${data.worker_count} workers !`);
+                    location.reload();
+                }
+            });
+        }
+        
+        // Log pour débogage
+        console.log('🚀 BI-COMPUTE Hackathon Demo');
+        console.log('🌐 Coordinateur:', '{{ coordinator_url }}');
+        console.log('☁️ Railway:', {{ 'true' if is_railway else 'false' }});
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>
